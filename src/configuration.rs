@@ -1,8 +1,9 @@
-use secrecy::{ExposeSecret, Secret};
-use serde::Deserialize;
 use std::{env, error};
 
 use anyhow::anyhow;
+use secrecy::{ExposeSecret, Secret};
+use serde::Deserialize;
+use serde_aux::field_attributes::deserialize_number_from_string;
 
 #[derive(Debug, Deserialize)]
 pub struct Setting {
@@ -13,6 +14,7 @@ pub struct Setting {
 #[derive(Debug, Deserialize)]
 pub struct AppSettings {
     pub host: String,
+    #[serde(deserialize_with = "deserialize_number_from_string")]
     pub port: u16,
 }
 
@@ -55,7 +57,11 @@ pub fn get_configuration() -> Result<Setting, Box<dyn error::Error>> {
     let settings = config::Config::builder()
         .add_source(config::File::from(config_dir.join("base")))
         .add_source(config::File::from(config_dir.join(deploy.as_str())))
-        // .add_source(config::Environment::with_prefix("APP"))
+        .add_source(
+            config::Environment::with_prefix("APP")
+                .prefix_separator("_")
+                .separator("__"),
+        )
         .build()?
         .try_deserialize()?;
 
