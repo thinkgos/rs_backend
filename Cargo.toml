@@ -10,7 +10,7 @@ edition = "2021"
 actix-web = "4"
 serde = { version = "1", features = ["derive"] }
 tokio = { version = "1", features = ["full"] }
-sqlx ={ version = "0.6.3", features = ["macros","uuid", "migrate", "chrono", "runtime-tokio-rustls", "postgres"] }
+sqlx ={ version = "0.6.3", features = ["macros","uuid", "migrate", "chrono", "runtime-tokio-rustls", "postgres","offline"] }
 config = "0.13"
 uuid = {version = "1", features = ["v4"]}
 chrono = "0.4"
@@ -23,7 +23,7 @@ tracing-bunyan-formatter = "0.3"
 tracing-log = "0.1"
 tracing-actix-web = "0.7"
 secrecy = {version = "0.8", features = ["serde"]}
-
+anyhow = "1"
 [dev-dependencies]
 reqwest = "0.11"
 

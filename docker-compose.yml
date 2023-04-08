@@ -1,0 +1,14 @@
+version: "3"
+
+services:
+  aihr-admin:
+    image: rs_backend
+    restart: unless-stopped
+    ports:
+      - 9587:9587
+    networks:
+      - infra
+
+networks:
+  infra:
+    external: true

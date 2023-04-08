@@ -1,6 +1,8 @@
 use secrecy::{ExposeSecret, Secret};
 use serde::Deserialize;
-use std::error;
+use std::{env, error};
+
+use anyhow::anyhow;
 
 #[derive(Debug, Deserialize)]
 pub struct Setting {
@@ -10,7 +12,7 @@ pub struct Setting {
 
 #[derive(Debug, Deserialize)]
 pub struct AppSettings {
-    pub ip: String,
+    pub host: String,
     pub port: u16,
 }
 
@@ -25,7 +27,7 @@ pub struct DatabaseSettings {
 
 impl AppSettings {
     pub fn addr(&self) -> String {
-        format!("{}:{}", self.ip, self.port)
+        format!("{}:{}", self.host, self.port)
     }
 }
 
@@ -43,12 +45,53 @@ impl DatabaseSettings {
 }
 
 pub fn get_configuration() -> Result<Setting, Box<dyn error::Error>> {
+    let work_dir = env::current_dir()?;
+    let config_dir = work_dir.join("conf");
+
+    let deploy: Deploy = env::var("APP_DEPLOY")
+        .unwrap_or_else(|_| "dev".into())
+        .try_into()?;
+
     let settings = config::Config::builder()
-        .add_source(config::File::with_name("configuration"))
-        .add_source(config::Environment::with_prefix("APP"))
+        .add_source(config::File::from(config_dir.join("base")))
+        .add_source(config::File::from(config_dir.join(deploy.as_str())))
+        // .add_source(config::Environment::with_prefix("APP"))
         .build()?
         .try_deserialize()?;
 
     tracing::info!("{:?}", settings);
     Ok(settings)
+}
+
+/// The possible runtime environment for our application.
+pub enum Deploy {
+    Local,
+    Dev,
+    Prod,
+}
+
+impl Deploy {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Deploy::Local => "local",
+            Deploy::Dev => "dev",
+            Deploy::Prod => "prod",
+        }
+    }
+}
+
+impl TryFrom<String> for Deploy {
+    type Error = anyhow::Error;
+
+    fn try_from(s: String) -> Result<Self, Self::Error> {
+        match s.to_lowercase().as_str() {
+            "local" => Ok(Self::Local),
+            "dev" => Ok(Self::Dev),
+            "prod" => Ok(Self::Prod),
+            other => Err(anyhow!(
+                "{} is not a supported environment. Use either `local` or `prod`.",
+                other
+            )),
+        }
+    }
 }

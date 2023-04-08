@@ -8,6 +8,7 @@ use sqlx::PgPool;
 use rs_backend::configuration;
 use rs_backend::startup;
 use rs_backend::telemetry;
+use sqlx::postgres::PgPoolOptions;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn error::Error>> {
@@ -21,7 +22,11 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
 
     tracing::info!("listen address: {addr}");
 
-    let connect = PgPool::connect(dsn.expose_secret()).await?;
+    // let connect = PgPool::connect(dsn.expose_secret()).await?;
+    let connect = PgPoolOptions::new()
+        .acquire_timeout(std::time::Duration::from_secs(2))
+        .connect_lazy(dsn.expose_secret())?;
+    // PgPool::connect_lazy(dsn.expose_secret())?;
     let lst = TcpListener::bind(addr)?;
     startup::run(lst, connect)?.await?;
     Ok(())
