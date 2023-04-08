@@ -8,3 +8,4 @@ database:
   username: "postgres"
   password: "123456"
   db_name: "newsletter"
+  require_ssl: true

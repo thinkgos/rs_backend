@@ -9,7 +9,7 @@ services:
     networks:
       - infra
     environment:
-      - APP_APP__PORT=1234
+      - APP_APP.PORT=1234
 networks:
   infra:
     external: true
